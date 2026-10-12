@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 8000
 
-ENTRYPOINT [ "python", "main.py" ]
+CMD [ "python", "main.py" ]

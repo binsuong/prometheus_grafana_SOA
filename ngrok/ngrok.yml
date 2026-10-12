@@ -1,0 +1,13 @@
+version: "2"
+
+tunnels:
+  python-app:
+    proto: http
+    addr: app:8000
+  # grafana-dashboard:
+  #   proto: http
+  #   addr: grafana:3000
+
+  prometheus-dashboard:
+    proto: http
+    addr: prometheus:9090

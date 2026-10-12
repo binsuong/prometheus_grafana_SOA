@@ -6,20 +6,50 @@ services:
     container_name: demo-app
     environment:
       PORT: "8000"
+    networks:
+      - app-net
+      - monitor-net
     ports:
       - "8000:8000"
     restart: unless-stopped
+
   prometheus:
     image: prom/prometheus:latest
     container_name: demo-prometheus
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     depends_on:
       - app
+    networks:
+      - monitor-net
     ports:
       - "9090:9090"
     restart: unless-stopped
 
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: demo-ngrok
+    command: ["start", "--all", "--config", "/etc/ngrok.yml"]
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    volumes:
+      - ./ngrok/ngrok.yml:/etc/ngrok.yml:ro
+    depends_on:
+      - app
+      - prometheus
+      # - grafana
+    networks:
+      - app-net
+      - monitor-net
+    ports:
+      - "4040:4040"
+    restart: unless-stopped
+    
+networks:
+  app-net:
+  monitor-net:
+
 volumes:
   prometheus_data:
+  grafana_data:

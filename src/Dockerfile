@@ -1,12 +1,12 @@
 FROM python:3-slim
 
-WORKDIR /src
+WORKDIR /app
 
-COPY requirements.txt ./
+COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY . .
 
-EXPOSE 9000
+EXPOSE 8000
 
-CMD [ "python", "./main.py" ]
+ENTRYPOINT [ "python", "main.py" ]

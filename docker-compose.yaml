@@ -13,6 +13,19 @@ services:
       - "8000:8000"
     restart: unless-stopped
 
+  fakeuser:
+    build: ./src
+    container_name: demo-fakeuser
+    command: ["python", "fakeuser.py"]
+    environment:
+      TARGET: "http://app:8000"
+    depends_on:
+      - app
+    networks:
+      - app-net
+    restart: unless-stopped
+
+
   prometheus:
     image: prom/prometheus:latest
     container_name: demo-prometheus
@@ -45,7 +58,7 @@ services:
     ports:
       - "4040:4040"
     restart: unless-stopped
-    
+
 networks:
   app-net:
   monitor-net:

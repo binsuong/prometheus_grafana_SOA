@@ -72,12 +72,13 @@ docker compose ps
 | Metrics | [localhost:8000/metrics](http://localhost:8000/metrics) | Hiển thị dữ liệu metrics dạng văn bản. |
 | Prometheus | [localhost:9090/targets](http://localhost:9090/targets) | Chờ khoảng 10–20 giây; target `python-app` và `prometheus` có trạng thái `UP`. |
 | Grafana | [localhost:3000](http://localhost:3000) | Đăng nhập bằng `GRAFANA_ACCOUNT` và `GRAFANA_PASS` trong `.env`. |
+| ngrok (khi bật) | [localhost:4040](http://localhost:4040) và URL public do ngrok cung cấp | Kiểm tra tunnel `grafana-dashboard` trỏ tới `grafana:3000`; mở URL public và xác nhận truy cập được trang đăng nhập Grafana. |
 
 Grafana đã có cấu hình tự nạp nguồn dữ liệu **Prometheus**. Để kiểm tra, mở **Explore**, chọn nguồn dữ liệu **Prometheus** và chạy truy vấn `up{job="python-app"}`; kết quả mong đợi là `1`.
 
 File `grafana/dashboards/demo.json` hiện đang trống nên chưa có dashboard mẫu để mở. Bạn có thể tạo dashboard trong Grafana hoặc bổ sung file JSON dashboard hợp lệ vào đường dẫn này. Bộ `fakeuser` tự tạo lưu lượng; chờ 1–2 phút nếu truy vấn metrics chưa có dữ liệu.
 
-Nếu bật ngrok, tunnel hiện trỏ tới Grafana. Xem trạng thái và thông tin kết nối bằng:
+Nếu bật ngrok, mở [localhost:4040](http://localhost:4040) để xem tunnel và lấy URL public. Nếu không mở được giao diện kiểm tra, xem trạng thái và thông tin kết nối trong log:
 
 ```sh
 docker compose logs --tail=100 ngrok

@@ -9,3 +9,7 @@ scrape_configs:
    static_configs:
     - targets:
       - 'app:8000'
+ - job_name: 'dead-targets'
+   static_configs:
+    - targets:
+      - '10.255.255.1:9999'

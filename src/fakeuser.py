@@ -8,7 +8,7 @@ import urllib.request
 
 TARGET = os.environ.get("TARGET")
 
-PATHS = ["/", "/healthz", "/work", "/work", "/slow", "/work", "/fail", "/work", "/nope"]
+PATHS = ["/", "/health", "/work", "/work", "/slow", "/work", "/fail", "/work", "/nope"]
 
 
 def hit(path: str) -> None:

@@ -27,8 +27,13 @@ services:
 
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.13.4
     container_name: demo-prometheus
+    command: 
+      - --storage.tsdb.retention.time=15d
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+      - --config.file=/etc/prometheus/prometheus.yml
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -40,8 +45,29 @@ services:
       - "9090:9090"
     restart: unless-stopped
 
+  grafana:
+    image: grafana/grafana:13.0
+    container_name: demo-grafana
+    environment: 
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ACCOUNT}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASS}
+      GF_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/demo.json
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - monitor-net
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
   ngrok:
-    image: ngrok/ngrok:latest
+    image: ngrok/ngrok:3.39.11-debian
     container_name: demo-ngrok
     command: ["start", "--all", "--config", "/etc/ngrok.yml"]
     environment:

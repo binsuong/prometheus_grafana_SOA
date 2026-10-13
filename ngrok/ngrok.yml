@@ -4,10 +4,10 @@ tunnels:
   # python-app:
   #   proto: http
   #   addr: app:8000
-  # grafana-dashboard:
-  #   proto: http
-  #   addr: grafana:3000
-
-  prometheus-dashboard:
+  grafana-dashboard:
     proto: http
-    addr: prometheus:9090
+    addr: grafana:3000
+
+  # prometheus-dashboard:
+  #   proto: http
+  #   addr: prometheus:9090

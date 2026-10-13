@@ -1,7 +1,7 @@
 # Hướng dẫn setup Prometheus Grafana SOA
 
 ## 1. Chuẩn bị
-
+- Tạo tài khoản Ngrok
 - Cài Git và Docker Desktop (hoặc Docker Engine có Docker Compose).
 - Mở Docker trước khi chạy lệnh. Trên Windows, sử dụng Linux containers.
 - Đảm bảo các cổng `8000`, `9090`, `3000` chưa bị sử dụng; cần thêm `4040` nếu chạy ngrok.
@@ -46,13 +46,8 @@ Không chia sẻ hoặc commit file `.env` chứa thông tin đăng nhập.
 
 ## 4. Khởi động
 
-**Chạy local, không cần ngrok:**
 
-```sh
-docker compose up -d --build app fakeuser prometheus grafana
-```
-
-**Hoặc chạy toàn bộ hệ thống, bao gồm ngrok** (cần điền `NGROK_AUTHTOKEN` trước):
+**Chạy toàn bộ hệ thống, bao gồm ngrok** (cần điền `NGROK_AUTHTOKEN` trước):
 
 ```sh
 docker compose up -d --build
@@ -68,7 +63,7 @@ docker compose ps
 
 | Thành phần | Địa chỉ | Cách kiểm tra |
 | --- | --- | --- |
-| Ứng dụng | [localhost:8000/healthz](http://localhost:8000/healthz) | Phản hồi `ok`. |
+| Ứng dụng | [localhost:8000/health](http://localhost:8000/healthz) | Phản hồi `ok`. |
 | Metrics | [localhost:8000/metrics](http://localhost:8000/metrics) | Hiển thị dữ liệu metrics dạng văn bản. |
 | Prometheus | [localhost:9090/targets](http://localhost:9090/targets) | Chờ khoảng 10–20 giây; target `python-app` và `prometheus` có trạng thái `UP`. |
 | Grafana | [localhost:3000](http://localhost:3000) | Đăng nhập bằng `GRAFANA_ACCOUNT` và `GRAFANA_PASS` trong `.env`. |
@@ -76,9 +71,8 @@ docker compose ps
 
 Grafana đã có cấu hình tự nạp nguồn dữ liệu **Prometheus**. Để kiểm tra, mở **Explore**, chọn nguồn dữ liệu **Prometheus** và chạy truy vấn `up{job="python-app"}`; kết quả mong đợi là `1`.
 
-File `grafana/dashboards/demo.json` hiện đang trống nên chưa có dashboard mẫu để mở. Bạn có thể tạo dashboard trong Grafana hoặc bổ sung file JSON dashboard hợp lệ vào đường dẫn này. Bộ `fakeuser` tự tạo lưu lượng; chờ 1–2 phút nếu truy vấn metrics chưa có dữ liệu.
 
-Nếu bật ngrok, mở [localhost:4040](http://localhost:4040) để xem tunnel và lấy URL public. Nếu không mở được giao diện kiểm tra, xem trạng thái và thông tin kết nối trong log:
+Mở [localhost:4040](http://localhost:4040) để xem tunnel và lấy URL public. Nếu không mở được giao diện kiểm tra, xem trạng thái và thông tin kết nối trong log:
 
 ```sh
 docker compose logs --tail=100 ngrok
@@ -89,14 +83,10 @@ Sử dụng URL public do ngrok cung cấp để truy cập Grafana từ bên ng
 ## 6. Dừng và chạy lại
 
 ```sh
-# Dừng hệ thống, giữ dữ liệu Prometheus và Grafana
+# Dừng hệ thống
 docker compose down
 
-# Chạy lại trên máy local
-docker compose up -d --build app fakeuser prometheus grafana
 ```
-
-Nếu muốn chạy lại cùng ngrok, dùng `docker compose up -d --build`.
 
 ## 7. Khi setup gặp lỗi
 

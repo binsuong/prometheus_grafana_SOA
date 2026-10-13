@@ -50,12 +50,6 @@ REQUEST_LATENCY = Histogram("demo_http_request_duration_seconds",
                             ["path"],
                             buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 3.0, 4.5, 5.0, 6.0))
 
-QUEUE_DEPTH = Gauge("demo_queue_depth",
-                    "Process waiting in the simulated queue")
-
-TASKS = Counter("demo_tasks_processed_total",
-                "Tasks processed",
-                ["output"])
 class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
@@ -84,39 +78,38 @@ class Handler(BaseHTTPRequestHandler):
         
         return self._response(status, body)
 
+
     def _handle(self, path: str) -> Tuple[int, str]:
         if path == "/": return 200, "Demo"
-        elif path == "/health": return 200, "Ok\n"
-        elif path == "/work": 
+
+        if path == "/health": return 200, "Ok\n"
+
+        if path == "/work": 
             output = "Ok" if random.random() < 0.9 else "Error"
             time.sleep(random.uniform(0.01, 0.5))
 
             return (200 if output == "Ok" else 500), f"{output}\n"
-        elif path == "/slow":
+        
+        if path == "/slow":
             time.sleep(random.uniform(1.0, 5.0))
             return 200, "Slow request\n"
-        elif path == "/fail": return 500, "Failure\n"
-        else: return 404, "Not found\n"
+        
+        if path == "/fail": return 500, "Failure\n"
+        return 404, "Not found\n"
+
 
     def _response(self, status: int, body: str):
         data = body.encode()
         self.send_response(200)
-        self.send_header("Content-Type", "text/plan; charset=utf-8")
+        self.send_header("Content-Type", "text/plain; charset=utf-8")
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
 
-def queue_simulate(stop_event: threading.Event):
-    tick = 0
-    while not stop_event.wait(1.0):
-        tick += 1
-        QUEUE_DEPTH.set(max(0.0, 6 + 5 * (tick % 60) / 60 + random.uniform(-2, 2)))
-        TASKS.labels(output="ok").inc(random.randint(0, 4))
+
 def main():
     stop_event = threading.Event()
-    threading.Thread(
-        target=queue_simulate, args=(stop_event,), daemon=True, name="worker"
-    ).start()
+
     server = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
 
     def shutdown(signum, frame):

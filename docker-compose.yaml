@@ -1,11 +1,17 @@
 name: prometheus-grafana
 
+networks:
+  app-net:
+  monitor-net:
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
 services:
   app:
     build: ./src
     container_name: demo-app
-    environment:
-      PORT: "8000"
     networks:
       - app-net
       - monitor-net
@@ -25,6 +31,19 @@ services:
       - app-net
     restart: unless-stopped
 
+  spam_request:
+    build: ./src
+    container_name: demo-spam_request
+    command: ["python", "spam_request.py"]
+    environment:
+      TARGET: "http://app:8000"
+    ports:
+      - "8080:8080"
+    networks:
+      - app-net
+    depends_on:
+      - app
+    restart: unless-stopped
 
   prometheus:
     image: prom/prometheus:v3.13.4
@@ -49,11 +68,12 @@ services:
     image: grafana/grafana:13.0
     container_name: demo-grafana
     environment: 
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ACCOUNT}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASS}
-      GF_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/demo.json
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ACCOUNT:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASS:-admin}
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/demo.json
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_SERVER_ROOT_URL: https://grafana.meomeo.baby
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
@@ -66,29 +86,13 @@ services:
       - "3000:3000"
     restart: unless-stopped
 
-  ngrok:
-    image: ngrok/ngrok:3.39.11-debian
-    container_name: demo-ngrok
-    command: ["start", "--all", "--config", "/etc/ngrok.yml"]
-    environment:
-      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
-    volumes:
-      - ./ngrok/ngrok.yml:/etc/ngrok.yml:ro
-    depends_on:
-      - app
-      - prometheus
-      # - grafana
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.1
+    container_name: demo-tunnel
+    env_file:
+      - .env
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TOKEN}
     networks:
-      - app-net
       - monitor-net
-    ports:
-      - "4040:4040"
+      - app-net
     restart: unless-stopped
-
-networks:
-  app-net:
-  monitor-net:
-
-volumes:
-  prometheus_data:
-  grafana_data:

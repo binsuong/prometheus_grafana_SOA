@@ -48,7 +48,7 @@ services:
   prometheus:
     image: prom/prometheus:v3.13.4
     container_name: demo-prometheus
-    command: 
+    command:
       - --storage.tsdb.retention.time=15d
       - --storage.tsdb.path=/prometheus
       - --web.enable-lifecycle
@@ -67,7 +67,7 @@ services:
   grafana:
     image: grafana/grafana:13.0
     container_name: demo-grafana
-    environment: 
+    environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ACCOUNT:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASS:-admin}
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/demo.json
@@ -117,12 +117,13 @@ services:
       - app-net
     restart: unless-stopped
 
-  cadvisor:  
+  cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.52.0
     container_name: demo-cadvisor
+    privileged: true
     ports:
       - "8081:8080"
-    volumes: 
+    volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro

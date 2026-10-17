@@ -86,6 +86,26 @@ services:
       - "3000:3000"
     restart: unless-stopped
 
+  # Note by Khai: Trường hợp dự phòng không có cloudflared
+  ngrok:
+    image: ngrok/ngrok:3.39.11-debian
+    container_name: demo-ngrok
+    command: ["start", "--all", "--config", "/etc/ngrok.yml"]
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    volumes:
+      - ./ngrok/ngrok.yml:/etc/ngrok.yml:ro
+    depends_on:
+      - app
+      - prometheus
+      - grafana
+    networks:
+      - app-net
+      - monitor-net
+    ports:
+      - "4040:4040"
+    restart: unless-stopped
+
   cloudflared:
     image: cloudflare/cloudflared:2026.10.1
     container_name: demo-tunnel
@@ -96,3 +116,36 @@ services:
       - monitor-net
       - app-net
     restart: unless-stopped
+
+  cadvisor:  
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: demo-cadvisor
+    ports:
+      - "8081:8080"
+    volumes: 
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - monitor-net
+    restart: unless-stopped
+
+  node_exporter:   
+    image: prom/node-exporter:v1.12.1
+    container_name: demo-node_exporter
+    restart: unless-stopped 
+    ports:
+      - "9100:9100" 
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+    networks:
+      - monitor-net
